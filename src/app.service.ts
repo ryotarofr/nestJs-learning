@@ -3,34 +3,42 @@ import { v4 as uuid } from 'uuid'
 
 import { ReportType } from './types/type';
 import { data } from './data/data';
+import { ReportResponseDto } from './dtos/report.dtos';
 
 interface Report {
   source: string
   amount: number
 }
 
+interface UpdateReport {
+  source?: string
+  amount?: number
+}
+
 @Injectable()
 export class AppService {
-  getAllReports(type: ReportType) {
+  getAllReports(type: ReportType): ReportResponseDto[] {
     try {
-      const filteredReports = data.report.filter((report) => report.type === type);
+      const filteredReports = data.report
+        .filter((report) => report.type === type)
+        .map((report) => new ReportResponseDto(report));
       return filteredReports;
     } catch (error) {
       throw error;
     }
   }
 
-  getReportById(type: ReportType, id: string) {
+  getReportById(type: ReportType, id: string): ReportResponseDto {
     const filteredReports = data.report.filter((report) => report.type === type);
     const reportById = filteredReports.find((report) => report.id === id);
 
     if (!reportById) {
       throw new HttpException('利用できるデータがありません', HttpStatus.NOT_FOUND);
     }
-    return reportById;
+    return new ReportResponseDto(reportById);
   }
 
-  createReport(type: ReportType, { source, amount }: Report) {
+  createReport(type: ReportType, { source, amount }: Report): ReportResponseDto {
     const newReport = {
       id: uuid(),
       source,
@@ -43,7 +51,7 @@ export class AppService {
     return newReport
   }
 
-  updateReport(type: ReportType, id: string, body: Report) {
+  updateReport(type: ReportType, id: string, body: UpdateReport): ReportResponseDto {
     const filteredReports = data.report.filter((report) => report.type === type);
     const reportUpdateById = filteredReports.find((report) => report.id === id);
 
@@ -59,7 +67,7 @@ export class AppService {
       updated_at: new Date()
     }
 
-    return data.report[reportUpdatedById];
+    return new ReportResponseDto(data.report[reportUpdatedById]);
   }
 
   deleteReport(id: string,) {
